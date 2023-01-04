@@ -1,8 +1,27 @@
 import classNames from 'classnames';
 import { GameActivity, GameSize } from '../shared/GameActivity';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ulid } from 'ulidx';
+
+const EMPTY_VALUE = Symbol('EmptyQueueItem');
+
+const EmptyItem: GameActivity = {
+    id: EMPTY_VALUE,
+    color: '',
+    created: new Date(),
+    nudged: false,
+    size: GameSize.BIG
+};
+
+function EmptyQueueItem() {
+    return <div className="item empty" key={ulid()}></div>;
+}
 
 function QueueItem(item: GameActivity) {
+    if (item.id == EMPTY_VALUE) {
+        return EmptyQueueItem();
+    }
+
     const s = `${item.created.getSeconds()}`.padStart(2, '0');
     const m = `${item.created.getMinutes()}`.padStart(2, '0');
     const ms = `${item.created.getMilliseconds()}`.padStart(3, '0');
@@ -13,8 +32,8 @@ function QueueItem(item: GameActivity) {
     return (
         <AnimatePresence key={`animate` + item.id}>
             <motion.div
-                key={item.id}
-                className={classNames('item', { big: GameSize.BIG === item.size })}
+                key={item.id.toString()}
+                className={classNames('item', { big: GameSize.BIG === item.size }, { nudged: item.nudged })}
                 style={{ backgroundColor: item.color }}
                 initial={{ opacity: 0, height: 100, marginTop: 10, x: -10 }}
                 animate={{ opacity: 1, height, marginTop, x: 0 }}
@@ -36,8 +55,16 @@ function getInReverseOrder<Type>(items: Type[]): Type[] {
     return result;
 }
 
-export default function Queue({ items }) {
+type QueueProps = {
+    items: GameActivity[];
+};
+
+export default function Queue(props: QueueProps) {
+    const { items } = props;
     const reversed = getInReverseOrder(items);
 
-    return <>{reversed.map((i) => QueueItem(i))}</>;
+    // pad the array with empty values so the animation looks better
+    const padded = [...reversed, ...Array(10 - reversed.length).fill(EmptyItem)];
+
+    return <>{padded.map((i: any) => QueueItem(i))}</>;
 }

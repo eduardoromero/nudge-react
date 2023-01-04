@@ -5,7 +5,7 @@ export enum GameSize {
 
 export type GameActivity = {
     size: GameSize;
-    id: string;
+    id: string | Symbol;
     created: Date;
     color: string;
     nudged: boolean;

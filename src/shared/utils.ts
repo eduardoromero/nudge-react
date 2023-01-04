@@ -1,12 +1,30 @@
 import { GameActivity, GameSize } from './GameActivity';
 import { ulid } from 'ulidx';
 
-const colors = ['#424B54', '#E1CE7A', '#c5baaf', '#89AAE6', '#3685B5', '#0471A6', '#AC80A0', '#FC7A57', '#EEFC57', '#DF9A57'];
+const colors = [
+    '#8ecae6',
+    '#219ebc',
+    '#89AAE6',
+    '#ffb703',
+    '#fb8500',
+    '#2a9d8f',
+    '#f4a261',
+    '#94d2bd',
+    '#a8dadc',
+    '#669bbc',
+    '#caf0f8',
+    '#ffcfd2',
+    '#98f5e1',
+    '#e9ecef',
+    '#ffe5ec',
+    '#ff8fab'
+];
 
 export function getRandomSize(): GameSize {
     const values = Object.keys(GameSize);
     const k = values[Math.floor(Math.random() * values.length)];
 
+    // @ts-ignore
     return GameSize[k];
 }
 
@@ -24,21 +42,8 @@ export function generateRandomItem(): GameActivity {
 }
 
 function generateRandomColor(): string {
-    const baseColors = [
-        '#424B54',
-        '#E1CE7A',
-        '#c5baaf',
-        '#FFFFFF',
-        '#89AAE6',
-        '#3685B5',
-        '#0471A6',
-        '#AC80A0',
-        '#FC7A57',
-        '#EEFC57',
-        '#DF9A57'
-    ];
-    const colorIndex = Math.round(new Date().getTime() / 1000) % baseColors.length;
-    const baseColor = baseColors[colorIndex];
+    const colorIndex = Math.round(new Date().getTime() / 1000) % colors.length;
+    const baseColor = colors[colorIndex];
     const [h, s, l] = hexToHsl(baseColor);
     const newHue = (h + Math.round(Math.random() * 50 - 10)) % 360;
     return hslToHex(newHue, s, l);
