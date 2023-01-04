@@ -75,17 +75,8 @@ function App() {
             <div className="intro">
                 <h2>Intro</h2>
                 <p>
-                    Nudging is a scheduling algorithm for Queueing jobs. It's intuitively simple and improves time in queue for light-tailed
-                    queues vs. First-Come First-Served (FIFO) while still preserving fairness.
-                    <a href="https://github.com/eduardoromero/nudge-react" target="_blank">
-                        Here
-                    </a>
-                    is the code, and{' '}
-                    <a href="https://github.com/eduardoromero/QNudge" target="_blank">
-                        here
-                    </a>{' '}
-                    is a simulation that generates runs with a lot more data (20,000 items) and then prints a summary of the average time in
-                    queue for both FCFS and with Nudge.
+                    Nudging is a scheduling algorithm for Queueing. It's intuitively simple and improves time in queue for light-tailed
+                    queues compared with First-Come First-Served (FIFO) while still preserving fairness.{' '}
                 </p>
             </div>
             <div id="holder">
@@ -146,22 +137,10 @@ function App() {
                 <div className={'item tail'}></div>
             </div>
             <div>
-                Nudged <strong>{nudges}</strong> times so far out of <strong>{total}</strong> total.
-                <strong> {percentage}%</strong> of all jobs get nudged,
+                Nudged <strong>{nudges}</strong> times so far out of <strong>{total}</strong> jobs, that's about
+                <strong> {percentage}%</strong> of all jobs.
             </div>
             <div className="intro">
-                <h2>How it works</h2>
-                <p>
-                    When a new job is inserted into the queue, we check if there is any existing job that is going to take longer to
-                    process. If there is one, we swap its position with the new job. This process is known as a "nudge." However, we only
-                    allow a job to be nudged once to ensure that the algorithm is fast and fair.
-                </p>
-                <p>
-                    There are two type of jobs, small and big. <span className="nudged">Nudged</span> jobs are marked with a dotted line The
-                    text on the job it's the "arrival timestamp" (in mm:ss.ms), it makes it easier to confirm when a job is older than
-                    another job. Finally, jobs that arrive closely together tend to have similar color, that way, when a job "jumps" over
-                    another it kinda looks out of place.
-                </p>
                 <h2>Trying it out</h2>
                 <ul>
                     <li>
@@ -179,6 +158,30 @@ function App() {
                         <strong> start consumer</strong>.
                     </li>
                 </ul>
+
+                <h2>How it works</h2>
+                <p>
+                    When a new job is inserted into the queue, we check if there is any existing job that is going to take longer to
+                    process. If there is one, we swap its position with the new job. This process is known as a "nudge." However, we only
+                    allow a job to be nudged once to ensure that the algorithm is fast and fair.
+                </p>
+                <p>
+                    There are two type of jobs, small and big. <span className="nudged">Nudged</span> jobs are marked with a dotted line The
+                    text on the job it's the "arrival timestamp" (in mm:ss.ms), it makes it easier to confirm when a job is older than
+                    another job. Finally, jobs that arrive closely together tend to have similar color, that way, when a job "jumps" over
+                    another it kinda looks out of place.
+                </p>
+                <p>
+                    <a href="https://github.com/eduardoromero/nudge-react" target="_blank">
+                        Here
+                    </a>{' '}
+                    is the code and{' '}
+                    <a href="https://github.com/eduardoromero/QNudge" target="_blank">
+                        here
+                    </a>{' '}
+                    is a simulation that generates runs with a lot more data (20,000 items) and then prints a summary of the average time in
+                    queue for both FCFS and with Nudge.
+                </p>
             </div>
         </div>
     );
