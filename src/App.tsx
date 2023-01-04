@@ -147,7 +147,7 @@ function App() {
             </div>
             <div>
                 Nudged <strong>{nudges}</strong> times so far out of <strong>{total}</strong> total.
-                <strong>{percentage}%</strong> of all jobs get nudged,
+                <strong> {percentage}%</strong> of all jobs get nudged,
             </div>
             <div className="intro">
                 <h2>How it works</h2>
