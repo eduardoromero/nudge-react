@@ -93,3 +93,8 @@ div.intro ul > li {
   cursor: pointer;
 }
 
+line {
+  stroke-width: 3px;
+  stroke-linecap: square;
+  fill: transparent;
+}

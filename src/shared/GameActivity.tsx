@@ -9,4 +9,5 @@ export type GameActivity = {
     created: Date;
     color: string;
     nudged: boolean;
+    triggeredNudge: boolean;
 };

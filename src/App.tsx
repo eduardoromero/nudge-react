@@ -1,20 +1,19 @@
-import './App.css';
-import { useReducer, useState } from 'react';
+import { useEventEmitter } from 'ahooks';
 import classNames from 'classnames';
-import { generateRandomItem } from './shared/utils';
-import Queue from './components/Queue';
-import { SimpleNudgingStore } from './shared/NudgingQueueStore';
-import { GameActivity } from './shared/GameActivity';
+import { useEffect, useReducer, useState } from 'react';
 import { clearInterval } from 'timers';
-
-type QueueEvent = {
-    type: 'queued' | 'dequeued';
-    item: GameActivity | undefined;
-};
+import './App.css';
+import Intro from './components/Intro';
+import Queue from './components/Queue';
+import { GameActivity } from './shared/GameActivity';
+import { SimpleNudgingStore } from './shared/NudgingQueueStore';
+import { QueueEvent } from './shared/QueueEvent';
+import { generateRandomItem } from './shared/utils';
 
 type SimpleNudgingStoreState = {
     store: SimpleNudgingStore;
     nudges: number;
+    item?: GameActivity;
 };
 
 function QueueItemEventHandler(state: SimpleNudgingStoreState, event: QueueEvent): SimpleNudgingStoreState {
@@ -35,9 +34,10 @@ function QueueItemEventHandler(state: SimpleNudgingStoreState, event: QueueEvent
             let nudged = 0;
             if (new_store.getNudges()) {
                 nudged = 1;
+                item.triggeredNudge = true;
             }
 
-            return { store: new_store, nudges: nudges + nudged };
+            return { store: new_store, nudges: nudges + nudged, item };
         case 'dequeued':
             console.log(`Dequeueing item`);
 
@@ -46,11 +46,11 @@ function QueueItemEventHandler(state: SimpleNudgingStoreState, event: QueueEvent
                 console.log(`removed item: ${removed.id}`);
             }
 
-            return { store: new SimpleNudgingStore(store.getActivities()), nudges };
+            return { store: new SimpleNudgingStore(store.getActivities()), nudges, item: removed };
         default:
             console.log(`Unknown event: ${event}`);
 
-            return { store, nudges };
+            return { store, nudges, item };
     }
 }
 
@@ -58,17 +58,33 @@ function QueueItemEventHandler(state: SimpleNudgingStoreState, event: QueueEvent
 const initialTimers: any[] = [];
 const initial: SimpleNudgingStoreState = {
     store: new SimpleNudgingStore(),
-    nudges: 0
+    nudges: 0,
+    item: undefined
 };
+const seenInitialState = new Set<GameActivity>();
 
 function App() {
     const [total, updateTotalCounter] = useState(0);
     const [intervalToggle, toggleInterval] = useState(false);
     const [timers, updateTimers] = useState(initialTimers);
     const [state, dispatch] = useReducer(QueueItemEventHandler, initial);
+    const [seen, trackSeenItems] = useState(seenInitialState);
 
-    const { nudges } = state;
+    const { nudges, item } = state;
     const percentage = total === 0 ? 0 : Math.round((nudges / total) * 100);
+    const event$ = useEventEmitter<QueueEvent>();
+
+    useEffect(() => {
+        if (item && item.id !== '' && !seen.has(item)) {
+            // trigger only once
+            trackSeenItems(new Set([...seen, item]));
+
+            const { triggeredNudge = false } = item || {};
+            if (triggeredNudge) {
+                event$.emit({ type: 'nudged', item });
+            }
+        }
+    }, [item]);
 
     return (
         <div id="App">
@@ -84,7 +100,10 @@ function App() {
                     id="generate"
                     onClick={() => {
                         const item = generateRandomItem();
-                        dispatch({ type: 'queued', item });
+                        const event: QueueEvent = { type: 'queued', item };
+
+                        dispatch(event);
+                        event$.emit(event);
 
                         updateTotalCounter(total + 1);
                     }}
@@ -99,7 +118,9 @@ function App() {
                 <button
                     id="dequeue"
                     onClick={() => {
-                        dispatch({ type: 'dequeued', item: undefined });
+                        const event: QueueEvent = { type: 'dequeued', item: undefined };
+                        dispatch(event);
+                        event$.emit(event);
                     }}
                     disabled={state.store.length() < 1}
                     className={classNames({
@@ -115,7 +136,9 @@ function App() {
                             const timer = setInterval(() => {
                                 console.log(`Tick!`);
 
-                                dispatch({ type: 'dequeued', item: undefined });
+                                const event: QueueEvent = { type: 'dequeued', item: undefined };
+                                dispatch(event);
+                                event$.emit(event);
                             }, 500);
 
                             updateTimers([...timers, timer]);
@@ -132,57 +155,13 @@ function App() {
                 </button>
             </div>
             <div id="grid">
-                <div className={'item head'}></div>
-                <Queue items={state.store.getActivities()} />
-                <div className={'item tail'}></div>
+                <Queue items={state.store.getActivities()} emitter={event$} />
             </div>
             <div>
                 Nudged <strong>{nudges}</strong> times so far out of <strong>{total}</strong> jobs, that's about
                 <strong> {percentage}%</strong> of all jobs.
             </div>
-            <div className="intro">
-                <h2>Trying it out</h2>
-                <ul>
-                    <li>
-                        Add a job to the queue by clicking the <strong>add</strong> button. The Queue can hold a maximum of 10 jobs.
-                    </li>
-                    <li>
-                        Consume a job by clicking the <strong>dequeue</strong> button.
-                    </li>
-                    <li>
-                        Continue to add jobs. When a job is <span className="nudged">Nudged</span> it swaps places with the new job, and it
-                        stays in the last position of the queue.
-                    </li>
-                    <li>
-                        If you want the job consumer can take a way a job every tick. Start it by clicking
-                        <strong> start consumer</strong>.
-                    </li>
-                </ul>
-
-                <h2>How it works</h2>
-                <p>
-                    When a new job is inserted into the queue, we check if there is any existing job that is going to take longer to
-                    process. If there is one, we swap its position with the new job. This process is known as a "nudge." However, we only
-                    allow a job to be nudged once to ensure that the algorithm is fast and fair.
-                </p>
-                <p>
-                    There are two type of jobs, small and big. <span className="nudged">Nudged</span> jobs are marked with a dotted line The
-                    text on the job it's the "arrival timestamp" (in mm:ss.ms), it makes it easier to confirm when a job is older than
-                    another job. Finally, jobs that arrive closely together tend to have similar color, that way, when a job "jumps" over
-                    another it kinda looks out of place.
-                </p>
-                <p>
-                    <a href="https://github.com/eduardoromero/nudge-react" target="_blank">
-                        Here
-                    </a>{' '}
-                    is the code and{' '}
-                    <a href="https://github.com/eduardoromero/QNudge" target="_blank">
-                        here
-                    </a>{' '}
-                    is a simulation that generates runs with a lot more data (20,000 items) and then prints a summary of the average time in
-                    queue for both FCFS and with Nudge.
-                </p>
-            </div>
+            <Intro />
         </div>
     );
 }

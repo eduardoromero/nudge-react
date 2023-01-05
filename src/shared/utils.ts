@@ -37,7 +37,8 @@ export function generateRandomItem(): GameActivity {
         size: getRandomSize(),
         created: d,
         color,
-        nudged: false
+        nudged: false,
+        triggeredNudge: false
     };
 }
 
